@@ -43,19 +43,9 @@
   <script type="application/javascript" charset="utf-8" src="js/dbhelper.js"></script>
   <script type="application/javascript" charset="utf-8" src="js/main.js"></script>
   <script async defer src="https://maps.googleapis.com/maps/api/js?force=lite&key=AIzaSyAbLvvrt6KH3C3h-oOOjEwYawlCgT-XnjI&libraries=places&callback=initMap"></script>
-  
   <!-- Register the service worker -->
-  <script>
-  if ('serviceWorker' in navigator) {
-    //window.addEventListener('load', function() {
-      navigator.serviceWorker.register('/sw.js').then(function() {
-        console.log('Registration worked!');
-      }).catch(function() {
-      console.log('Registration failed!');
-      });
-    //});
-  }
-  </script>
+  <script type="application/javascript" charset="utf-8" src="js/swReg.js"></script>
+
 
 
   <footer id="footer">
