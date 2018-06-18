@@ -1,0 +1,12 @@
+{
+  "name": "RestaurantReviewsSTG2",
+  "version": "0.9.1",
+  "private": true,
+  "description": "Restaurant review app stage 2",
+  "main": "",
+  "scripts": {},
+  "author": "Iakovos Pr.",
+  "dependencies": {
+    "idb": "^2.1.2"
+  }
+}
