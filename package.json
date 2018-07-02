@@ -1,8 +1,8 @@
 {
-  "name": "RestaurantReviewsSTG2",
-  "version": "0.9.1",
+  "name": "RestaurantReviewsSTG3",
+  "version": "0.9.9",
   "private": true,
-  "description": "Restaurant review app stage 2",
+  "description": "Restaurant review app stage 3",
   "main": "",
   "scripts": {},
   "author": "Iakovos Pr.",

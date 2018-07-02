@@ -11,6 +11,10 @@ class DBHelper {
     const port = 1337 // Change this to your server port
     return `http://localhost:${port}/restaurants`;
   }
+  static get REVIEW_URL() {
+    const port = 1337 // Change this to your server port
+    return `http://localhost:${port}/reviews`;
+  }
 
   /**
    * Fetch all restaurants.
@@ -18,6 +22,7 @@ class DBHelper {
   static fetchRestaurants(callback) {
 
     function addRestaurants(data){
+      //console.log(`In add ${data}`);
       const restaurants = data;
       DBHelper.addToDatabase(restaurants);
       return restaurants;
@@ -164,7 +169,7 @@ class DBHelper {
     return (`/img/${restaurant.photograph}.webp`);
   }
   static imageSrcSetForRestaurant(restaurant) {  
-    return (`/img/w270/${restaurant.photograph}.webp 270w, /img/w540/${restaurant.photograph}.webp 540w, /img/${restaurant.photograph}.webp 800w`);
+    return (`/img/w270/${restaurant.photograph}.webp 270w, /img/w540/${restaurant.photograph}.webp 540w, /img/w270/${restaurant.photograph}.webp 800w`);
   }
 
   /**
@@ -194,19 +199,77 @@ class DBHelper {
       var store = upgradeDb.createObjectStore('restaurants', {
         keyPath: 'id'
       });
+      var revStore =  upgradeDb.createObjectStore('reviews', { 
+        keyPath: 'id' 
+      });
+      var revStoreOffline =  upgradeDb.createObjectStore('reviewsOffline', { 
+        keyPath: 'id' 
+      });
     });
   }
   
   static addToDatabase(restaurantList) {
     var dbPromise = this.openDatabase();
-
     return dbPromise.then(db => {
       if (!db) return;
       const tx = db.transaction('restaurants', 'readwrite');
       const restaurantStore = tx.objectStore('restaurants');
       restaurantList.forEach(restaurant => {
+        //console.log(`Restaurant:${restaurant}`);
         restaurantStore.put(restaurant);
       });
+    });
+    return tx.complete;
+  }
+
+  static addReviewsToDatabase(reviews) {
+    var dbPromise = this.openDatabase();
+    return dbPromise.then(db => {
+      if (!db) return;
+      const tx = db.transaction('reviews', 'readwrite');
+      const revStore = tx.objectStore('reviews');
+      reviews.forEach(review => {
+        revStore.put(review);
+      });
+    });
+    return tx.complete;
+  }
+
+  static addReviewsOfflineToDatabase(review) {
+    var dbPromise = this.openDatabase();
+    return dbPromise.then(db => {
+      if (!db) return;
+      const tx = db.transaction('reviewsOffline', 'readwrite');
+      const revStoreOffline = tx.objectStore('reviewsOffline');
+      revStoreOffline.put(review);
+    });
+    return tx.complete;
+  }
+
+  /**
+   * Delete entries from restaurant idb.
+   */
+  static deleteRestaurant(id) {
+    var dbPromise = this.openDatabase();
+    return dbPromise.then(db => {
+     // console.log(`The restaurant ID: ${id}`);
+      if (!db) return;
+      const tx = db.transaction('restaurants', 'readwrite');
+      const restaurantStore = tx.objectStore('restaurants').delete(id);
+    });
+    return tx.complete;
+  }
+
+  /**
+   * Delete entries from offline reviews.
+   */
+  static deleteOffRevDatabase(id) {
+    var dbPromise = this.openDatabase();
+    return dbPromise.then(db => {
+      console.log(`The offDB ID: ${id}`);
+      if (!db) return;
+      const tx = db.transaction('reviewsOffline', 'readwrite');
+      const revStore = tx.objectStore('reviewsOffline').delete(id);
     });
     return tx.complete;
   }
@@ -217,5 +280,72 @@ class DBHelper {
       return db.transaction('restaurants').objectStore('restaurants').getAll();
     });
   }
+
+  static getReviewsFromCache() {
+    return DBHelper.openDatabase().then(db => {
+      if (!db) return;
+      return db.transaction('reviews').objectStore('reviews').getAll();
+    });
+  }
+
+  static getOfflineReviewsFromCache() {
+    return DBHelper.openDatabase().then(db => {
+      if (!db) return;
+      return db.transaction('reviewsOffline').objectStore('reviewsOffline').getAll();
+    });
+  }
+
+
+  /**
+   * Get all reviews for a restaurant by id
+   */
+  static getReviewsByID(id, callback){
+    fetch(DBHelper.REVIEW_URL+'?restaurant_id='+id).then((response) => {
+      return response.json()
+    }).then(reviews => {
+      callback(null, reviews);  
+      DBHelper.addReviewsToDatabase(reviews);
+    }).catch(error => {
+      let reviews = this.getReviewsFromCache().then((reviews) => {
+        return Promise.resolve(reviews);
+      }).then(reviews => {
+        callback(null, reviews);
+      }).catch(error => {
+        callback(error, null);
+      })
+
+    })
+  }
+
+  /**
+   * Sets the is_favorite status of a Restaurant
+   */
+  static setRestFavoriteStat(status, restaurant_id){
+    fetch(DBHelper.DATABASE_URL + `/${restaurant_id}/?is_favorite=${status}`, {
+      method: 'PUT',
+      headers:{ 'Content-Type': 'application/json' }
+    }).then(response => {
+      console.log('Changed favorite status:', response);
+      return response.json();
+    }).catch(error => {
+      console.log(error);
+    })
+  };
+
+  /**
+   * Saves a review to the server
+   */
+  static postReview(reviewData){
+    fetch(DBHelper.REVIEW_URL, {
+      body: JSON.stringify(reviewData),
+      method: 'POST',
+    }).then(response => {
+      console.log('Review post to server response:', response);
+    }).catch(error => {
+      console.log(error);
+    })
+  }
+ 
+
 
 }

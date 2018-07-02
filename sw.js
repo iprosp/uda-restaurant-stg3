@@ -36,10 +36,14 @@ self.addEventListener('fetch', function (event) {
         caches.match(event.request)
         .then(function (response) {
             if (response) return response;
-            //if (event.request.cache === 'only-if-cached' && event.request.mode !== 'same-origin') return;
+            if (event.request.cache === 'only-if-cached' && event.request.mode !== 'same-origin') return;
             return fetch(event.request);
         })
     );
+});
+
+self.addEventListener('activate', event => {
+    event.waitUntil(clients.claim());
 });
 
 self.addEventListener('activate', function (event) {

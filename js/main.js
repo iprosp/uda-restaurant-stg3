@@ -4,6 +4,7 @@ let restaurants,
 var map
 var markers = []
 
+
 /**
  * Fetch neighborhoods and cuisines as soon as the page is loaded.
  */
@@ -24,6 +25,20 @@ fetchNeighborhoods = () => {
       fillNeighborhoodsHTML();
     }
   });
+}
+
+/** 
+ * We start with the map hidden in order to increase performance
+ */ 
+openMap = () => {
+  let mapDisplay = document.getElementById('map').style.display;
+  if (mapDisplay === 'none') {
+    mapDisplay = 'block'
+    window.initMap();
+  } else {
+    mapDisplay = 'none'
+  }
+  document.getElementById('map').style.display = mapDisplay;
 }
 
 /**
@@ -67,26 +82,12 @@ fillCuisinesHTML = (cuisines = self.cuisines) => {
   });
 }
 
-/**
- * Initialize Google map, called from HTML.
- */
-window.initMap = () => {
-  let loc = {
-    lat: 40.722216,
-    lng: -73.987501
-  };
-  self.map = new google.maps.Map(document.getElementById('map'), {
-    zoom: 12,
-    center: loc,
-    scrollwheel: false
-  });
-  updateRestaurants();
-}
 
 /**
  * Update page and map for current restaurants.
  */
 updateRestaurants = () => {
+  
   const cSelect = document.getElementById('cuisines-select');
   const nSelect = document.getElementById('neighborhoods-select');
 
@@ -102,8 +103,26 @@ updateRestaurants = () => {
     } else {
       resetRestaurants(restaurants);
       fillRestaurantsHTML();
+      addMarkersToMap();
     }
   })
+}
+
+
+/**
+ * Initialize Google map
+ */
+window.initMap = () => {
+  let loc = {
+    lat: 40.722216,
+    lng: -73.987501
+  };
+  self.map = new google.maps.Map(document.getElementById('map'), {
+    zoom: 12,
+    center: loc,
+    scrollwheel: false
+  });
+  updateRestaurants();
 }
 
 /**
@@ -129,7 +148,6 @@ fillRestaurantsHTML = (restaurants = self.restaurants) => {
   restaurants.forEach(restaurant => {
     ul.append(createRestaurantHTML(restaurant));
   });
-  addMarkersToMap();
 }
 
 /**
@@ -142,7 +160,6 @@ createRestaurantHTML = (restaurant) => {
   image.className = 'restaurant-img';
   image.srcset = DBHelper.imageSrcSetForRestaurant(restaurant);
   image.src = DBHelper.imageUrlForRestaurant(restaurant);
-  //image.sizes="(max-width: 1800px) 270px, (max-width: 900px) 33vw, 254px">
   image.sizes = "270px";
   image.alt = 'Photo of ' + restaurant.name;
   li.append(image);
@@ -180,12 +197,3 @@ addMarkersToMap = (restaurants = self.restaurants) => {
     self.markers.push(marker);
   });
 }
-
-//Register the service worker
-// if ('serviceWorker' in navigator) {
- // navigator.serviceWorker.register('/sw.js').then(function() {
-   // console.log('Registration worked!');
- // }).catch(function() {
-   // console.log('Registration failed!');
- // });
-// }
